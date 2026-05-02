@@ -1,0 +1,174 @@
+/* --- Gallery Masonry Layout --- */
+.board-container {
+    padding: 20px 0;
+    min-height: calc(100vh - var(--nav-height) - 40px); /* For html2canvas to have background */
+    background-color: var(--bg-color); /* Capture background too */
+}
+
+.gallery-grid {
+    /* Using CSS Columns for Masonry */
+    column-count: 5;
+    column-gap: 20px;
+    width: 100%;
+}
+
+@media (max-width: 1400px) { .gallery-grid { column-count: 4; } }
+@media (max-width: 1100px) { .gallery-grid { column-count: 3; } }
+@media (max-width: 800px) { .gallery-grid { column-count: 2; } }
+@media (max-width: 500px) { .gallery-grid { column-count: 1; } }
+
+/* --- Note Card --- */
+.note-card {
+    position: relative;
+    break-inside: avoid;
+    margin-bottom: 20px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--surface-color);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    padding: 24px;
+    color: #1a1a1a; /* Force dark text for notes by default unless extremely dark background */
+}
+
+.note-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.note-content {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    white-space: pre-wrap; /* Preserve line breaks */
+    word-break: break-word;
+}
+
+.note-meta {
+    font-size: 0.8rem;
+    color: rgba(0,0,0,0.5);
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Card Actions Overlay */
+.note-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.note-card:hover .note-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.action-btn:hover {
+    background: #fff;
+    transform: scale(1.1);
+}
+
+.action-btn.delete:hover {
+    color: var(--accent-color);
+}
+
+/* --- Modal Updates --- */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.hidden {
+    display: none !important;
+}
+
+.modal-content {
+    background: var(--surface-color);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.close-modal {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+}

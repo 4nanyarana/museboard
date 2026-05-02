@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MuseBoard | Discover Aesthetic</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/gallery.css">
+
+    <!-- HTML2Canvas for downloading the board -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="nav-brand">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>MuseBoard</span>
+        </a>
+        
+        <div class="nav-search">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search notes...">
+        </div>
+        
+        <div class="nav-links">
+            <button id="undoBtn" class="btn-icon" aria-label="Undo last action" title="Undo (Ctrl+Z)" disabled>
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button id="themeToggle" class="btn-icon" aria-label="Toggle dark mode" title="Toggle Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button id="downloadBtn" class="btn btn-secondary" title="Download Board as Image">
+                <i class="fa-solid fa-download"></i> Download
+            </button>
+            <button id="addNoteBtn" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> New Note
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        
+        <!-- Categories Filter -->
+        <div class="categories-filter" id="categoriesFilter">
+            <button class="category-btn active" data-category="all">All</button>
+            <button class="category-btn" data-category="Minimalist">Minimalist</button>
+            <button class="category-btn" data-category="Interior Design">Interior Design</button>
+            <button class="category-btn" data-category="Aesthetics">Aesthetics</button>
+            <button class="category-btn" data-category="Photography">Photography</button>
+            <button class="category-btn" data-category="Fashion">Fashion</button>
+            <button class="category-btn" data-category="Architecture">Architecture</button>
+            <button class="category-btn" data-category="Nature">Nature</button>
+        </div>
+
+        <!-- Board Container (to be captured by html2canvas) -->
+        <div id="boardContainer" class="board-container">
+            <div class="gallery-grid" id="notesGrid">
+                <!-- Notes will be injected here via JS -->
+            </div>
+            
+            <div id="noResultsMsg" class="hidden" style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%; grid-column: 1 / -1;">
+                <h2>No notes found</h2>
+                <p>Try searching for something else or add a new note.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Note Modal -->
+    <div id="noteModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Note</h2>
+                <button class="close-modal"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="noteForm">
+                    <input type="hidden" id="noteId">
+                    <div class="form-group">
+                        <textarea id="noteContent" class="form-control" rows="5" placeholder="Write something..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="noteCategory">Category:</label>
+                        <select id="noteCategory" class="form-control">
+                            <option value="Minimalist">Minimalist</option>
+                            <option value="Interior Design">Interior Design</option>
+                            <option value="Aesthetics">Aesthetics</option>
+                            <option value="Photography">Photography</option>
+                            <option value="Fashion">Fashion</option>
+                            <option value="Architecture">Architecture</option>
+                            <option value="Nature">Nature</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group color-picker-group">
+                        <label for="noteColor">Card Color:</label>
+                        <input type="color" id="noteColor" value="#ffffff">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Note</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/notes.js"></script>
+</body>
+</html>
