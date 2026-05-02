@@ -4,114 +4,716 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MuseBoard | Discover Aesthetic</title>
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/gallery.css">
-
-    <!-- HTML2Canvas for downloading the board -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-color: #fdfcf8; /* Soft Cream */
+            --text-main: #2c2c2c;
+            --text-muted: #767676;
+            --accent: #e63946; /* Subtle red for save button */
+            --card-bg: #ffffff;
+            --nav-height: 80px;
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-main: #fdfcf8;
+            --text-muted: #aaaaaa;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-sans);
+            color: var(--text-main);
+            padding-top: var(--nav-height);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: rgba(253, 252, 248, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+
+        [data-theme="dark"] nav {
+            background: rgba(18, 18, 18, 0.95);
+        }
+
+        .logo {
+            font-family: var(--font-serif);
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .search-bar {
+            background: #efefef;
+            border-radius: 30px;
+            padding: 12px 24px;
+            width: 40%;
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+        }
+
+        [data-theme="dark"] .search-bar {
+            background: #2a2a2a;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            color: var(--text-main);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn.primary {
+            background-color: var(--text-main);
+            color: var(--bg-color);
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+
+        .nav-btn.primary:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] .icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* --- FILTER TAGS --- */
+        .filters {
+            display: flex;
+            gap: 15px;
+            padding: 20px 40px;
+            overflow-x: auto;
+            scrollbar-width: none; 
+        }
+        .filters::-webkit-scrollbar { display: none; }
+
+        .filter-tag {
+            padding: 8px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tag.active, .filter-tag:hover {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border-color: var(--text-main);
+        }
+
+        /* --- MASONRY GRID --- */
+        .gallery-container {
+            padding: 20px 40px;
+            column-count: 4;
+            column-gap: 20px;
+            min-height: calc(100vh - 150px);
+        }
+
+        @media (max-width: 1200px) { .gallery-container { column-count: 3; } }
+        @media (max-width: 800px) { .gallery-container { column-count: 2; padding: 10px 20px;} }
+        @media (max-width: 500px) { .gallery-container { column-count: 1; } }
+
+        .pin {
+            break-inside: avoid;
+            margin-bottom: 20px;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 24px;
+            color: #2c2c2c; /* Text defaults to dark, dynamically adjusted in JS */
+        }
+
+        [data-theme="dark"] .pin {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .pin:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .note-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 20px;
+        }
+
+        /* --- OVERLAY & ACTIONS --- */
+        .pin-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            pointer-events: none; /* Let clicks pass to the card content */
+        }
+
+        .pin:hover .pin-overlay {
+            opacity: 1;
+        }
+
+        .action-buttons {
+            align-self: flex-end;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto; /* Buttons should be clickable */
+        }
+
+        .save-btn {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .save-btn:hover {
+            background-color: #efefef;
+        }
+
+        .save-btn.delete {
+            color: #e63946;
+        }
+
+        .pin-info {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .pin-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+
+        /* --- MODAL --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: translateY(0);
+            transition: transform 0.3s;
+        }
+
+        .modal.hidden .modal-content {
+            transform: translateY(30px);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid var(--border-color); border-radius: 50%; }
+
+        .hidden-el {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <a href="#" class="nav-brand">
-            <i class="fa-solid fa-layer-group"></i>
-            <span>MuseBoard</span>
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="logo">
+            MuseBoard<span>.</span>
         </a>
-        
-        <div class="nav-search">
-            <i class="fa-solid fa-search"></i>
+
+        <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Search notes...">
         </div>
-        
+
         <div class="nav-links">
-            <button id="undoBtn" class="btn-icon" aria-label="Undo last action" title="Undo (Ctrl+Z)" disabled>
+            <button id="undoBtn" class="icon-btn" title="Undo (Ctrl+Z)" disabled style="opacity: 0.5;">
                 <i class="fa-solid fa-rotate-left"></i>
             </button>
-            <button id="themeToggle" class="btn-icon" aria-label="Toggle dark mode" title="Toggle Theme">
+            <button id="themeToggle" class="icon-btn" title="Toggle Dark Mode">
                 <i class="fa-solid fa-moon"></i>
             </button>
-            <button id="downloadBtn" class="btn btn-secondary" title="Download Board as Image">
+            <button id="downloadBtn" class="nav-btn">
                 <i class="fa-solid fa-download"></i> Download
             </button>
-            <button id="addNoteBtn" class="btn btn-primary">
+            <button id="addNoteBtn" class="nav-btn primary">
                 <i class="fa-solid fa-plus"></i> New Note
             </button>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="container">
-        
-        <!-- Categories Filter -->
-        <div class="categories-filter" id="categoriesFilter">
-            <button class="category-btn active" data-category="all">All</button>
-            <button class="category-btn" data-category="Minimalist">Minimalist</button>
-            <button class="category-btn" data-category="Interior Design">Interior Design</button>
-            <button class="category-btn" data-category="Aesthetics">Aesthetics</button>
-            <button class="category-btn" data-category="Photography">Photography</button>
-            <button class="category-btn" data-category="Fashion">Fashion</button>
-            <button class="category-btn" data-category="Architecture">Architecture</button>
-            <button class="category-btn" data-category="Nature">Nature</button>
-        </div>
+    <!-- Filter Tags -->
+    <div class="filters" id="categoryFilters">
+        <div class="filter-tag active" data-cat="All">All</div>
+        <div class="filter-tag" data-cat="Minimalist">Minimalist</div>
+        <div class="filter-tag" data-cat="Interior Design">Interior Design</div>
+        <div class="filter-tag" data-cat="Aesthetics">Aesthetics</div>
+        <div class="filter-tag" data-cat="Photography">Photography</div>
+        <div class="filter-tag" data-cat="Fashion">Fashion</div>
+        <div class="filter-tag" data-cat="Architecture">Architecture</div>
+        <div class="filter-tag" data-cat="Nature">Nature</div>
+    </div>
 
-        <!-- Board Container (to be captured by html2canvas) -->
-        <div id="boardContainer" class="board-container">
-            <div class="gallery-grid" id="notesGrid">
-                <!-- Notes will be injected here via JS -->
-            </div>
-            
-            <div id="noResultsMsg" class="hidden" style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%; grid-column: 1 / -1;">
-                <h2>No notes found</h2>
-                <p>Try searching for something else or add a new note.</p>
-            </div>
-        </div>
-    </main>
+    <!-- Masonry Grid -->
+    <div class="gallery-container" id="boardContainer">
+        <!-- Notes dynamically injected here -->
+    </div>
+    
+    <div id="emptyState" class="hidden-el" style="text-align: center; width: 100%; padding: 50px; color: var(--text-muted); font-family: var(--font-serif); font-size: 1.5rem; grid-column: 1 / -1;">
+        No notes found. Create one!
+    </div>
 
-    <!-- Add/Edit Note Modal -->
+    <!-- Modal -->
     <div id="noteModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Add Note</h2>
                 <button class="close-modal"><i class="fa-solid fa-times"></i></button>
             </div>
-            <div class="modal-body">
-                <form id="noteForm">
-                    <input type="hidden" id="noteId">
-                    <div class="form-group">
-                        <textarea id="noteContent" class="form-control" rows="5" placeholder="Write something..." required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="noteCategory">Category:</label>
-                        <select id="noteCategory" class="form-control">
-                            <option value="Minimalist">Minimalist</option>
-                            <option value="Interior Design">Interior Design</option>
-                            <option value="Aesthetics">Aesthetics</option>
-                            <option value="Photography">Photography</option>
-                            <option value="Fashion">Fashion</option>
-                            <option value="Architecture">Architecture</option>
-                            <option value="Nature">Nature</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group color-picker-group">
-                        <label for="noteColor">Card Color:</label>
-                        <input type="color" id="noteColor" value="#ffffff">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Note</button>
-                </form>
-            </div>
+            <form id="noteForm">
+                <input type="hidden" id="noteId">
+                <div class="form-group">
+                    <textarea id="noteContent" class="form-control" placeholder="Write something aesthetic..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">Category</label>
+                    <select id="noteCategory" class="form-control">
+                        <option value="Minimalist">Minimalist</option>
+                        <option value="Interior Design">Interior Design</option>
+                        <option value="Aesthetics">Aesthetics</option>
+                        <option value="Photography">Photography</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Architecture">Architecture</option>
+                        <option value="Nature">Nature</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group color-picker-group">
+                    <label style="font-weight: 600;">Card Color:</label>
+                    <input type="color" id="noteColor" value="#ffffff">
+                </div>
+                <button type="submit" class="nav-btn primary" style="width: 100%; justify-content: center; padding: 15px;">Save Note</button>
+            </form>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script type="module" src="js/notes.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardContainer = document.getElementById('boardContainer');
+            const emptyState = document.getElementById('emptyState');
+            const searchInput = document.getElementById('searchInput');
+            const themeToggle = document.getElementById('themeToggle');
+            const addNoteBtn = document.getElementById('addNoteBtn');
+            const undoBtn = document.getElementById('undoBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            const noteModal = document.getElementById('noteModal');
+            const closeBtn = document.querySelector('.close-modal');
+            const noteForm = document.getElementById('noteForm');
+            const noteIdInput = document.getElementById('noteId');
+            const noteContentInput = document.getElementById('noteContent');
+            const noteCategoryInput = document.getElementById('noteCategory');
+            const noteColorInput = document.getElementById('noteColor');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            const filterTags = document.querySelectorAll('.filter-tag');
+
+            let notes = JSON.parse(localStorage.getItem('museboard_notes')) || [];
+            let historyStack = [];
+            let currentCategory = 'All';
+
+            initTheme();
+            renderNotes();
+            updateUndoBtn();
+
+            // --- Theme ---
+            function initTheme() {
+                const saved = localStorage.getItem('theme');
+                if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggle.addEventListener('click', () => {
+                    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('theme', 'light');
+                        themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                        themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    }
+                });
+            }
+
+            // --- Data & Undo ---
+            function saveNotes(newNotes) {
+                historyStack.push(JSON.stringify(notes));
+                if (historyStack.length > 20) historyStack.shift();
+                notes = newNotes;
+                localStorage.setItem('museboard_notes', JSON.stringify(notes));
+                renderNotes();
+                updateUndoBtn();
+            }
+
+            function undoLastAction() {
+                if (historyStack.length === 0) return;
+                notes = JSON.parse(historyStack.pop());
+                localStorage.setItem('museboard_notes', JSON.stringify(notes));
+                renderNotes();
+                updateUndoBtn();
+            }
+
+            function updateUndoBtn() {
+                undoBtn.disabled = historyStack.length === 0;
+                undoBtn.style.opacity = historyStack.length === 0 ? '0.5' : '1';
+            }
+
+            undoBtn.addEventListener('click', undoLastAction);
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    e.preventDefault();
+                    undoLastAction();
+                }
+            });
+
+            // --- Filters ---
+            filterTags.forEach(tag => {
+                tag.addEventListener('click', () => {
+                    filterTags.forEach(t => t.classList.remove('active'));
+                    tag.classList.add('active');
+                    currentCategory = tag.getAttribute('data-cat');
+                    renderNotes();
+                });
+            });
+
+            searchInput.addEventListener('input', () => renderNotes());
+
+            // --- Rendering ---
+            function renderNotes() {
+                boardContainer.innerHTML = '';
+                let filtered = notes;
+
+                if (currentCategory !== 'All') {
+                    filtered = filtered.filter(n => n.category === currentCategory);
+                }
+
+                const term = searchInput.value.toLowerCase();
+                if (term) {
+                    filtered = filtered.filter(n => n.content.toLowerCase().includes(term));
+                }
+
+                if (filtered.length === 0) {
+                    emptyState.classList.remove('hidden-el');
+                } else {
+                    emptyState.classList.add('hidden-el');
+                    filtered.sort((a, b) => b.timestamp - a.timestamp);
+
+                    filtered.forEach(note => {
+                        const card = document.createElement('div');
+                        card.className = 'pin';
+                        card.style.backgroundColor = note.color;
+                        
+                        const hex = note.color.replace('#', '');
+                        const r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
+                        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                        const textColor = (yiq >= 128) ? '#2c2c2c' : '#ffffff';
+                        card.style.color = textColor;
+
+                        card.innerHTML = `
+                            <div class="note-content">${escapeHTML(note.content)}</div>
+                            <div class="pin-info" style="border-top-color: ${textColor}33">
+                                <div class="pin-author">
+                                    <div class="avatar"><i class="fa-solid fa-tag"></i></div>
+                                    ${note.category || 'Other'}
+                                </div>
+                            </div>
+                            <div class="pin-overlay">
+                                <div></div>
+                                <div class="action-buttons">
+                                    <button class="save-btn edit-btn" data-id="${note.id}" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="save-btn delete delete-btn" data-id="${note.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                        `;
+                        boardContainer.appendChild(card);
+                    });
+
+                    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.currentTarget.dataset.id)));
+                    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                        if(confirm('Delete note?')) saveNotes(notes.filter(n => n.id !== e.currentTarget.dataset.id));
+                    }));
+                }
+            }
+
+            function escapeHTML(str) {
+                return str.replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag] || tag));
+            }
+
+            // --- Modal ---
+            function openModal(id = null) {
+                if (id) {
+                    const note = notes.find(n => n.id === id);
+                    if (note) {
+                        modalTitle.textContent = 'Edit Note';
+                        noteIdInput.value = note.id;
+                        noteContentInput.value = note.content;
+                        noteColorInput.value = note.color;
+                        noteCategoryInput.value = note.category || 'Minimalist';
+                    }
+                } else {
+                    modalTitle.textContent = 'Add Note';
+                    noteIdInput.value = '';
+                    noteContentInput.value = '';
+                    noteCategoryInput.value = currentCategory !== 'All' ? currentCategory : 'Minimalist';
+                    const colors = ['#fdfcf8', '#ffe5d9', '#d8e2dc', '#fcd5ce', '#e8e8e4', '#ffffff'];
+                    noteColorInput.value = colors[Math.floor(Math.random() * colors.length)];
+                }
+                noteModal.classList.remove('hidden');
+                setTimeout(() => noteContentInput.focus(), 50);
+            }
+
+            addNoteBtn.addEventListener('click', () => openModal());
+            closeBtn.addEventListener('click', () => noteModal.classList.add('hidden'));
+
+            noteForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = noteIdInput.value;
+                const content = noteContentInput.value.trim();
+                if (!content) return;
+
+                let newNotes = [...notes];
+                if (id) {
+                    const idx = newNotes.findIndex(n => n.id === id);
+                    if (idx > -1) newNotes[idx] = { ...newNotes[idx], content, color: noteColorInput.value, category: noteCategoryInput.value, timestamp: Date.now() };
+                } else {
+                    newNotes.push({ id: Date.now().toString(), content, color: noteColorInput.value, category: noteCategoryInput.value, timestamp: Date.now() });
+                }
+
+                saveNotes(newNotes);
+                noteModal.classList.add('hidden');
+            });
+
+            // --- Download (html2canvas) ---
+            downloadBtn.addEventListener('click', () => {
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+                
+                html2canvas(document.body, { // Capture body for full aesthetic
+                    backgroundColor: getComputedStyle(document.body).backgroundColor,
+                    scale: 2
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `MuseBoard_${new Date().toLocaleDateString().replace(/\//g, '-')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i> Download';
+                    downloadBtn.disabled = false;
+                }).catch(err => {
+                    console.error(err);
+                    alert('Download failed.');
+                    downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i> Download';
+                    downloadBtn.disabled = false;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
