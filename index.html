@@ -470,7 +470,12 @@
             <form id="noteForm">
                 <input type="hidden" id="noteId">
                 <div class="form-group">
-                    <textarea id="noteContent" class="form-control" placeholder="Write something aesthetic..." required></textarea>
+                    <textarea id="noteContent" class="form-control" placeholder="Write something aesthetic..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">Image (Optional)</label>
+                    <input type="file" id="noteImage" accept="image/*" class="form-control" style="border: none; padding: 0;">
+                    <img id="imagePreview" class="hidden-el" style="max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px;">
                 </div>
                 <div class="form-group">
                     <label style="font-weight: 600; margin-bottom: 8px; display: block;">Category</label>
@@ -511,7 +516,11 @@
             const noteContentInput = document.getElementById('noteContent');
             const noteCategoryInput = document.getElementById('noteCategory');
             const noteColorInput = document.getElementById('noteColor');
+            const noteImageInput = document.getElementById('noteImage');
+            const imagePreview = document.getElementById('imagePreview');
             const modalTitle = document.getElementById('modalTitle');
+            
+            let currentImageBase64 = null;
             
             const filterTags = document.querySelectorAll('.filter-tag');
 
@@ -617,7 +626,10 @@
                         const textColor = (yiq >= 128) ? '#2c2c2c' : '#ffffff';
                         card.style.color = textColor;
 
+                        const imgHtml = note.image ? `<img src="${note.image}" alt="Note Image" style="width: 100%; border-radius: 8px; margin-bottom: 12px;">` : '';
+
                         card.innerHTML = `
+                            ${imgHtml}
                             <div class="note-content">${escapeHTML(note.content)}</div>
                             <div class="pin-info" style="border-top-color: ${textColor}33">
                                 <div class="pin-author">
@@ -649,6 +661,11 @@
 
             // --- Modal ---
             function openModal(id = null) {
+                noteImageInput.value = '';
+                imagePreview.src = '';
+                imagePreview.classList.add('hidden-el');
+                currentImageBase64 = null;
+
                 if (id) {
                     const note = notes.find(n => n.id === id);
                     if (note) {
@@ -657,6 +674,11 @@
                         noteContentInput.value = note.content;
                         noteColorInput.value = note.color;
                         noteCategoryInput.value = note.category || 'Minimalist';
+                        if (note.image) {
+                            imagePreview.src = note.image;
+                            imagePreview.classList.remove('hidden-el');
+                            currentImageBase64 = note.image;
+                        }
                     }
                 } else {
                     modalTitle.textContent = 'Add Note';
@@ -673,18 +695,40 @@
             addNoteBtn.addEventListener('click', () => openModal());
             closeBtn.addEventListener('click', () => noteModal.classList.add('hidden'));
 
+            noteImageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert("Please select an image smaller than 2MB to save space.");
+                        noteImageInput.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        currentImageBase64 = ev.target.result;
+                        imagePreview.src = currentImageBase64;
+                        imagePreview.classList.remove('hidden-el');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    currentImageBase64 = null;
+                    imagePreview.src = '';
+                    imagePreview.classList.add('hidden-el');
+                }
+            });
+
             noteForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const id = noteIdInput.value;
                 const content = noteContentInput.value.trim();
-                if (!content) return;
+                if (!content && !currentImageBase64) return;
 
                 let newNotes = [...notes];
                 if (id) {
                     const idx = newNotes.findIndex(n => n.id === id);
-                    if (idx > -1) newNotes[idx] = { ...newNotes[idx], content, color: noteColorInput.value, category: noteCategoryInput.value, timestamp: Date.now() };
+                    if (idx > -1) newNotes[idx] = { ...newNotes[idx], content, color: noteColorInput.value, category: noteCategoryInput.value, image: currentImageBase64, timestamp: Date.now() };
                 } else {
-                    newNotes.push({ id: Date.now().toString(), content, color: noteColorInput.value, category: noteCategoryInput.value, timestamp: Date.now() });
+                    newNotes.push({ id: Date.now().toString(), content, color: noteColorInput.value, category: noteCategoryInput.value, image: currentImageBase64, timestamp: Date.now() });
                 }
 
                 saveNotes(newNotes);
